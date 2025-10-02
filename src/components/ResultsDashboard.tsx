@@ -1,6 +1,19 @@
-import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, TrendingDown, Minus, BarChart2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { StockAnalysisCard } from "@/components/StockAnalysisCard";
+import { 
+  getSectorStocks, 
+  getStockQuote, 
+  getStockOverview, 
+  getStockNews,
+  calculateSentimentScore,
+  calculateFundamentalScore,
+  generateRecommendation,
+  type StockQuote,
+  type StockOverview,
+  type NewsArticle
+} from "@/lib/stockApi";
 
 interface ResultsDashboardProps {
   sector: string;
@@ -8,31 +21,107 @@ interface ResultsDashboardProps {
   analysisWeight: number;
 }
 
-// Mock data for demonstration
-const generateMockResults = (sector: string, count: number) => {
-  const recommendations: ("BUY" | "HOLD" | "SELL")[] = ["BUY", "HOLD", "SELL"];
-  const stocks = [
-    { symbol: "TCS", name: "Tata Consultancy Services", price: 3654.50, change: 2.34 },
-    { symbol: "INFY", name: "Infosys Limited", price: 1456.80, change: -1.12 },
-    { symbol: "HDFCBANK", name: "HDFC Bank", price: 1628.90, change: 0.89 },
-    { symbol: "RELIANCE", name: "Reliance Industries", price: 2456.75, change: 1.45 },
-    { symbol: "ICICIBANK", name: "ICICI Bank", price: 986.30, change: 3.21 },
-  ];
-
-  return stocks.slice(0, count).map((stock, index) => ({
-    ...stock,
-    recommendation: recommendations[Math.floor(Math.random() * recommendations.length)] as "BUY" | "HOLD" | "SELL",
-    fundamentalScore: Math.floor(Math.random() * 30) + 70,
-    sentimentScore: Math.floor(Math.random() * 30) + 70,
-  }));
-};
+export interface StockAnalysis {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  recommendation: "BUY" | "HOLD" | "SELL";
+  fundamentalScore: number;
+  sentimentScore: number;
+  overview: StockOverview | null;
+  news: NewsArticle[];
+}
 
 export const ResultsDashboard = ({ sector, stockCount, analysisWeight }: ResultsDashboardProps) => {
-  const results = generateMockResults(sector, stockCount);
+  const [results, setResults] = useState<StockAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const stockSymbols = getSectorStocks(sector).slice(0, stockCount);
+        const stockData: StockAnalysis[] = [];
+
+        for (const symbol of stockSymbols) {
+          const quote = await getStockQuote(symbol);
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          
+          const overview = await getStockOverview(symbol);
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          
+          const news = await getStockNews(symbol, overview?.name || symbol);
+          
+          if (quote) {
+            const fundamentalScore = calculateFundamentalScore(overview);
+            const sentimentScore = calculateSentimentScore(news);
+            const recommendation = generateRecommendation(fundamentalScore, sentimentScore, analysisWeight);
+            
+            stockData.push({
+              symbol: symbol.replace('.BSE', ''),
+              name: overview?.name || symbol.replace('.BSE', ''),
+              price: quote.price,
+              change: quote.changePercent,
+              recommendation,
+              fundamentalScore,
+              sentimentScore,
+              overview,
+              news
+            });
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        setResults(stockData);
+      } catch (err) {
+        console.error('Error fetching stock data:', err);
+        setError('Failed to fetch stock data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStockData();
+  }, [sector, stockCount, analysisWeight]);
   
   const buyCount = results.filter(r => r.recommendation === "BUY").length;
   const holdCount = results.filter(r => r.recommendation === "HOLD").length;
   const sellCount = results.filter(r => r.recommendation === "SELL").length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" data-testid="loader-stocks" />
+          <div>
+            <p className="text-lg font-semibold" data-testid="text-loading">Analyzing stocks...</p>
+            <p className="text-sm text-muted-foreground">Fetching real-time market data</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 bg-destructive/10 border-destructive/30">
+        <p className="text-destructive" data-testid="text-error">{error}</p>
+      </Card>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <Card className="p-6">
+        <p className="text-muted-foreground" data-testid="text-no-results">No stock data available for this sector.</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -40,10 +129,10 @@ export const ResultsDashboard = ({ sector, stockCount, analysisWeight }: Results
       <div>
         <h2 className="text-3xl font-bold mb-6">Analysis Results</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-6 bg-gradient-success backdrop-blur-sm border-success/30">
+          <Card className="p-6 bg-gradient-success backdrop-blur-sm border-success/30" data-testid="card-buy-signals">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-success-foreground">{buyCount}</div>
+                <div className="text-3xl font-bold text-success-foreground" data-testid="text-buy-count">{buyCount}</div>
                 <div className="text-sm text-success-foreground/80">BUY Signals</div>
               </div>
               <div className="p-3 bg-success-foreground/10 rounded-lg">
@@ -52,10 +141,10 @@ export const ResultsDashboard = ({ sector, stockCount, analysisWeight }: Results
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-warning/20 to-warning/5 backdrop-blur-sm border-warning/30">
+          <Card className="p-6 bg-gradient-to-br from-warning/20 to-warning/5 backdrop-blur-sm border-warning/30" data-testid="card-hold-signals">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-foreground">{holdCount}</div>
+                <div className="text-3xl font-bold text-foreground" data-testid="text-hold-count">{holdCount}</div>
                 <div className="text-sm text-muted-foreground">HOLD Signals</div>
               </div>
               <div className="p-3 bg-warning/10 rounded-lg">
@@ -64,10 +153,10 @@ export const ResultsDashboard = ({ sector, stockCount, analysisWeight }: Results
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-destructive/20 to-destructive/5 backdrop-blur-sm border-destructive/30">
+          <Card className="p-6 bg-gradient-to-br from-destructive/20 to-destructive/5 backdrop-blur-sm border-destructive/30" data-testid="card-sell-signals">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-foreground">{sellCount}</div>
+                <div className="text-3xl font-bold text-foreground" data-testid="text-sell-count">{sellCount}</div>
                 <div className="text-sm text-muted-foreground">SELL Signals</div>
               </div>
               <div className="p-3 bg-destructive/10 rounded-lg">
