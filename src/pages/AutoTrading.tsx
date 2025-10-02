@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Zap, TrendingUp, Activity, DollarSign } from "lucide-react";
+import { ArrowLeft, Zap, TrendingUp, Activity, DollarSign, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AutoTrading = () => {
@@ -22,7 +21,7 @@ const AutoTrading = () => {
             </Button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <Zap className="w-4 h-4 text-primary-foreground" />
+                <LineChart className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-bold">Auto Trading</span>
             </div>

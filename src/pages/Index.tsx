@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { TrendingUp, BarChart3, Shield, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { TrendingUp, BarChart3, Shield, Sparkles, ArrowLeft, Bot } from "lucide-react";
 import { SectorSelector } from "@/components/SectorSelector";
 import { AnalysisControls } from "@/components/AnalysisControls";
 import { ResultsDashboard } from "@/components/ResultsDashboard";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
   const [analysisWeight, setAnalysisWeight] = useState(50);
   const [stockCount, setStockCount] = useState(5);
@@ -18,17 +20,39 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-bg text-foreground overflow-x-hidden">
+      {/* Header */}
+      <header className="border-b border-border bg-card/30 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Mode Selection
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-success to-success-dark flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold">AI Stock Advisor</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <header className="relative overflow-hidden">
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-success/10 pointer-events-none" />
-        <div className="container mx-auto px-4 py-16 md:py-24 relative">
+        <div className="container mx-auto px-4 py-12 md:py-16 relative">
           <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-card/50 backdrop-blur-sm border border-border rounded-full mb-4">
-              <Sparkles className="w-4 h-4 text-primary" />
+              <BarChart3 className="w-4 h-4 text-primary" />
               <span className="text-sm text-muted-foreground">AI-Powered Stock Analysis</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
               Indian Market Intelligence
             </h1>
             
@@ -53,7 +77,7 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 pb-24">

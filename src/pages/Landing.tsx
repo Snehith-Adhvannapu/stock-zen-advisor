@@ -17,7 +17,7 @@ const Landing = () => {
       <header className="container mx-auto px-4 py-8 relative">
         <div className="flex items-center justify-center gap-3 animate-fade-in">
           <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="w-6 h-6 text-primary-foreground" />
+            <TrendingUp className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
             Algora
@@ -56,7 +56,7 @@ const Landing = () => {
                 
                 <div className="relative z-10">
                   <div className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow">
-                    <Zap className="w-8 h-8 text-primary-foreground" />
+                    <TrendingUp className="w-8 h-8 text-primary-foreground" />
                   </div>
 
                   <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">
