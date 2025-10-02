@@ -14,6 +14,11 @@ export default defineConfig(({ mode }) => ({
       protocol: 'wss',
     },
   },
+  preview: {
+    host: "0.0.0.0",
+    port: 5000,
+    strictPort: true,
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
